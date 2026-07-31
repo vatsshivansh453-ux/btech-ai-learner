@@ -16,7 +16,7 @@ import uuid
 
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -40,8 +40,12 @@ from utils.memory import create_interview_session, get_interview_session
 from utils.dashboard import get_dashboard
 
 load_dotenv()
+router = APIRouter()
 
 app = FastAPI(title="BTech-AI-Learner API")
+
+
+GOOGLE_CLIENT_ID = "932026077017-7fa91hsl5oki13i416gou883ujv4tgas.apps.googleusercontent.com"
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
@@ -307,46 +311,33 @@ def interview_end(body: InterviewEndBody, user=Depends(get_current_user)):
 def dashboard(user=Depends(get_current_user)):
     return get_dashboard(user["id"])
 
-@app.post("/auth/google")
-def google_login(body: GoogleLoginBody):
+@router.post("/auth/google")
+async def google_login(data: GoogleLoginRequest):
+
     try:
-        google_user = id_token.verify_oauth2_token(
-            body.token,
-            google_requests.Request(),
-            "932026077017-7fa91hsl5oki13i416gou883ujv4tgas.apps.googleusercontent.com"
+        user_info = id_token.verify_oauth2_token(
+            data.token,
+            requests.Request(),
+            GOOGLE_CLIENT_ID
         )
 
-        email = google_user["email"]
-        name = google_user.get("name", "Google User")
+        email = user_info["email"]
+        name = user_info.get("name")
 
-        user = get_user_by_email(email)
+        # Check user in database
+        # Create user if not exists
+        # Generate your JWT token here
 
-        if not user:
-            user_id = create_user(
-                email,
-                "GOOGLE_AUTH",
-                name
-            )
-
-            user = {
-                "id": user_id,
+        return {
+            "token": "your_generated_jwt_token",
+            "user": {
                 "email": email,
                 "name": name
             }
-
-        token = create_access_token(user["id"])
-
-        return {
-            "token": token,
-            "user": {
-                "id": user["id"],
-                "email": user["email"],
-                "name": user["name"]
-            }
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(
-            status_code=401,
-            detail=f"Google login failed: {str(e)}"
+            status_code=400,
+            detail="Invalid Google token"
         )
