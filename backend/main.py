@@ -47,7 +47,9 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL,"https://btech-ai-learner.vercel.app"],
+    allow_origins=["https://btech-ai-learner.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:5500"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
