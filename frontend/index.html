@@ -157,6 +157,7 @@
   #notesContent{flex:1; min-width:0;}
   @media (max-width:800px){ .notes-toc{display:none;} }
 </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -170,6 +171,21 @@
     <input type="email" id="emailInput" placeholder="Email">
     <input type="password" id="passwordInput" placeholder="Password">
     <button id="authSubmitBtn">Log In</button>
+    <div style="margin-top:14px; display:flex; justify-content:center;">
+  <div
+    id="g_id_onload"
+    data-client_id="932026077017-7fa91hsl5oki13i416gou883ujv4tgas.apps.googleusercontent.com"
+    data-callback="handleGoogleLogin">
+  </div>
+
+  <div
+    class="g_id_signin"
+    data-type="standard"
+    data-size="large"
+    data-theme="outline"
+    data-text="signin_with">
+  </div>
+</div>
     <div class="auth-toggle" id="authToggle">Don't have an account? <a onclick="toggleAuthMode()">Sign up</a></div>
   </div>
 </div>
@@ -308,6 +324,37 @@ let currentQuizSubject = null, currentQuizTopic = null;
 let currentQuizQuestions = null, currentQuizAnswers = [];
 let currentChatSessionId = null;
 let currentInterviewSessionId = null;
+
+async function handleGoogleLogin(response) {
+  try {
+    const res = await fetch(`${API_BASE}/auth/google`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        token: response.credential
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.detail || "Google login failed");
+      return;
+    }
+
+    token = data.token;
+    currentUser = data.user;
+
+    localStorage.setItem("btech_token", token);
+
+    showApp();
+  } catch (err) {
+    console.error(err);
+    alert("Google login failed");
+  }
+}
 
 // ---------------- AUTH ----------------
 
