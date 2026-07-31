@@ -311,13 +311,13 @@ def interview_end(body: InterviewEndBody, user=Depends(get_current_user)):
 def dashboard(user=Depends(get_current_user)):
     return get_dashboard(user["id"])
 
-@router.post("/auth/google")
+@app.post("/auth/google")
 async def google_login(data: GoogleLoginBody):
 
     try:
         user_info = id_token.verify_oauth2_token(
             data.token,
-            requests.Request(),
+            google_requests.Request(),
             GOOGLE_CLIENT_ID
         )
 
