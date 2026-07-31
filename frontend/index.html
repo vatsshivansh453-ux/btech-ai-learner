@@ -405,9 +405,30 @@ function logout(){
   document.getElementById("authWrap").style.display = "flex";
 }
 
-async function authedFetch(path, options = {}){
-  options.headers = { ...(options.headers || {}), "Authorization": `Bearer ${token}` };
-  return fetch(`${API_BASE}${path}`, options);
+async function authedFetch(path, options = {}) {
+  console.log("=== AUTH DEBUG ===");
+  console.log("Path:", path);
+  console.log("Token variable:", token);
+  console.log("Token from localStorage:", localStorage.getItem("btech_token"));
+
+  const authToken = token || localStorage.getItem("btech_token");
+
+  options.headers = {
+    ...(options.headers || {}),
+    "Authorization": `Bearer ${authToken}`
+  };
+
+  console.log("Authorization Header:", `Bearer ${authToken}`);
+
+  const response = await fetch(`${API_BASE}${path}`, options);
+
+  console.log("Response Status:", response.status);
+
+  if (!response.ok) {
+    console.log("Response Error:", await response.clone().text());
+  }
+
+  return response;
 }
 
 async function showApp(){
