@@ -14,6 +14,8 @@ import os
 import shutil
 import uuid
 
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -74,6 +76,9 @@ class RegisterBody(BaseModel):
 class LoginBody(BaseModel):
     email: str
     password: str
+    
+class GoogleLoginBody(BaseModel):
+    token: str
 
 
 @app.post("/auth/register")
@@ -299,3 +304,47 @@ def interview_end(body: InterviewEndBody, user=Depends(get_current_user)):
 @app.get("/dashboard")
 def dashboard(user=Depends(get_current_user)):
     return get_dashboard(user["id"])
+
+@app.post("/auth/google")
+def google_login(body: GoogleLoginBody):
+    try:
+        google_user = id_token.verify_oauth2_token(
+            body.token,
+            google_requests.Request(),
+            "932026077017-7fa91hsl5oki13i416gou883ujv4tgas.apps.googleusercontent.com"
+        )
+
+        email = google_user["email"]
+        name = google_user.get("name", "Google User")
+
+        user = get_user_by_email(email)
+
+        if not user:
+            user_id = create_user(
+                email,
+                "GOOGLE_AUTH",
+                name
+            )
+
+            user = {
+                "id": user_id,
+                "email": email,
+                "name": name
+            }
+
+        token = create_access_token(user["id"])
+
+        return {
+            "token": token,
+            "user": {
+                "id": user["id"],
+                "email": user["email"],
+                "name": user["name"]
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=401,
+            detail=f"Google login failed: {str(e)}"
+        )
