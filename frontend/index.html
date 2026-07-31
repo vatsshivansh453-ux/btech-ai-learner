@@ -671,40 +671,78 @@ async function sendChatMessage(){
 
 // ---------------- QUIZ ----------------
 
-async function loadSubjectsForQuiz(){
-  const res = await authedFetch("/notes/subjects");
-  const data = await res.json();
-  const wrap = document.getElementById("quizSubjectPills");
-  wrap.innerHTML = "";
-  data.subjects.forEach(s => {
-    const pill = document.createElement("div");
-    pill.className = "pill";
-    pill.textContent = s;
-    pill.onclick = async () => {
-      document.querySelectorAll("#quizSubjectPills .pill").forEach(p => p.classList.remove("active"));
-      pill.classList.add("active");
-      currentQuizSubject = s;
-      const tres = await authedFetch(`/notes/${encodeURIComponent(s)}/topics`);
-      const tdata = await tres.json();
-      const twrap = document.getElementById("quizTopicPills");
-      twrap.innerHTML = "";
-      tdata.topics.forEach(t => {
-        const tp = document.createElement("div");
-        tp.className = "pill";
-        tp.textContent = t;
-        tp.onclick = () => {
-          document.querySelectorAll("#quizTopicPills .pill").forEach(p => p.classList.remove("active"));
-          tp.classList.add("active");
-          currentQuizTopic = t;
-          document.getElementById("startQuizBtn").disabled = false;
-        };
-        twrap.appendChild(tp);
-      });
-    };
-    wrap.appendChild(pill);
-  });
-}
+async function loadSubjectsForQuiz() {
+  try {
+    const res = await authedFetch("/notes/subjects");
 
+    if (!res.ok) {
+      console.error("Subjects API failed:", res.status, await res.text());
+      return;
+    }
+
+    const data = await res.json();
+
+    const wrap = document.getElementById("quizSubjectPills");
+    wrap.innerHTML = "";
+
+    data.subjects.forEach(s => {
+      const pill = document.createElement("div");
+      pill.className = "pill";
+      pill.textContent = s;
+
+      pill.onclick = async () => {
+        try {
+          document.querySelectorAll("#quizSubjectPills .pill")
+            .forEach(p => p.classList.remove("active"));
+
+          pill.classList.add("active");
+          currentQuizSubject = s;
+
+          const tres = await authedFetch(
+            `/notes/${encodeURIComponent(s)}/topics`
+          );
+
+          if (!tres.ok) {
+            console.error(
+              "Topics API failed:",
+              tres.status,
+              await tres.text()
+            );
+            return;
+          }
+
+          const tdata = await tres.json();
+
+          const twrap = document.getElementById("quizTopicPills");
+          twrap.innerHTML = "";
+
+          tdata.topics.forEach(t => {
+            const tp = document.createElement("div");
+            tp.className = "pill";
+            tp.textContent = t;
+
+            tp.onclick = () => {
+              document.querySelectorAll("#quizTopicPills .pill")
+                .forEach(p => p.classList.remove("active"));
+
+              tp.classList.add("active");
+              currentQuizTopic = t;
+              document.getElementById("startQuizBtn").disabled = false;
+            };
+
+            twrap.appendChild(tp);
+          });
+        } catch (err) {
+          console.error("Topic loading error:", err);
+        }
+      };
+
+      wrap.appendChild(pill);
+    });
+  } catch (err) {
+    console.error("Quiz subjects loading error:", err);
+  }
+}
 async function startQuiz(){
   const area = document.getElementById("quizArea");
   area.innerHTML = `<div class="card">Generating quiz…</div>`;
