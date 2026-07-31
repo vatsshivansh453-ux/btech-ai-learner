@@ -44,6 +44,10 @@ router = APIRouter()
 
 app = FastAPI(title="BTech-AI-Learner API")
 
+@app.get("/test")
+async def test():
+    return {"message": "FastAPI is loading this file"}
+
 
 GOOGLE_CLIENT_ID = "932026077017-7fa91hsl5oki13i416gou883ujv4tgas.apps.googleusercontent.com"
 
@@ -341,3 +345,4 @@ async def google_login(data: GoogleLoginBody):
             status_code=400,
             detail="Invalid Google token"
         )
+        
