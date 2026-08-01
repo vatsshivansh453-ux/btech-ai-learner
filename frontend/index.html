@@ -344,10 +344,14 @@
       <h2>Quiz</h2>
       <p class="subtitle">Test yourself on any subject/topic — instantly scored, with a freshly generated set of questions every single time.</p>
       <div class="card">
-        <div class="pill-grid" id="quizSubjectPills" style="margin-bottom:12px;"></div>
-        <div class="pill-grid" id="quizTopicPills" style="margin-bottom:12px;"></div>
-        <button class="btn" id="startQuizBtn" onclick="startQuiz()" disabled>Generate Quiz</button>
+        <div class="section-label" style="margin-top:0;">Step 1 · Choose a subject</div>
+        <div class="pill-grid" id="quizSubjectPills"></div>
       </div>
+      <div class="card" id="quizTopicCard" style="display:none;">
+        <div class="section-label" style="margin-top:0;">Step 2 · Choose a topic</div>
+        <div class="pill-grid" id="quizTopicPills"></div>
+      </div>
+      <button class="btn" id="startQuizBtn" onclick="startQuiz()" disabled style="margin-bottom:20px;">Generate Quiz</button>
       <div id="quizArea"></div>
     </div>
 
@@ -833,6 +837,7 @@ async function loadSubjectsForQuiz() {
 
           const twrap = document.getElementById("quizTopicPills");
           twrap.innerHTML = "";
+          document.getElementById("quizTopicCard").style.display = "block";
 
           tdata.topics.forEach(t => {
             const tp = document.createElement("div");
