@@ -13,10 +13,11 @@ Features:
 import os
 import shutil
 import uuid
+import secrets
 
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, APIRouter
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -40,9 +41,12 @@ from utils.memory import create_interview_session, get_interview_session
 from utils.dashboard import get_dashboard
 
 load_dotenv()
-router = APIRouter()
 
 app = FastAPI(title="BTech-AI-Learner API")
+
+@app.get("/test")
+async def test():
+    return {"message": "FastAPI is loading this file"}
 
 
 GOOGLE_CLIENT_ID = "932026077017-7fa91hsl5oki13i416gou883ujv4tgas.apps.googleusercontent.com"
@@ -82,7 +86,7 @@ class RegisterBody(BaseModel):
 class LoginBody(BaseModel):
     email: str
     password: str
-    
+
 class GoogleLoginBody(BaseModel):
     token: str
 
@@ -105,6 +109,33 @@ def login(body: LoginBody):
 
     token = create_access_token(user["id"])
     return {"token": token, "user": {"id": user["id"], "email": user["email"], "name": user["name"]}}
+
+
+@app.post("/auth/google")
+async def google_login(data: GoogleLoginBody):
+    try:
+        user_info = id_token.verify_oauth2_token(
+            data.token,
+            google_requests.Request(),
+            GOOGLE_CLIENT_ID
+        )
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid Google token")
+
+    email = user_info["email"]
+    name = user_info.get("name", email.split("@")[0])
+
+    user = get_user_by_email(email)
+    if not user:
+        # Google-authenticated users don't need a real password;
+        # store an unusable random hash as a placeholder.
+        random_password_hash = hash_password(secrets.token_hex(32))
+        user_id = create_user(email, random_password_hash, name)
+    else:
+        user_id = user["id"]
+
+    token = create_access_token(user_id)
+    return {"token": token, "user": {"id": user_id, "email": email, "name": name}}
 
 
 @app.get("/auth/me")
@@ -310,34 +341,3 @@ def interview_end(body: InterviewEndBody, user=Depends(get_current_user)):
 @app.get("/dashboard")
 def dashboard(user=Depends(get_current_user)):
     return get_dashboard(user["id"])
-
-@router.post("/auth/google")
-async def google_login(data: GoogleLoginBody):
-
-    try:
-        user_info = id_token.verify_oauth2_token(
-            data.token,
-            requests.Request(),
-            GOOGLE_CLIENT_ID
-        )
-
-        email = user_info["email"]
-        name = user_info.get("name")
-
-        # Check user in database
-        # Create user if not exists
-        # Generate your JWT token here
-
-        return {
-            "token": "your_generated_jwt_token",
-            "user": {
-                "email": email,
-                "name": name
-            }
-        }
-
-    except Exception:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid Google token"
-        )
