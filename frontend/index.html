@@ -156,6 +156,73 @@
   .notes-toc a:hover, .notes-toc a.active{background:var(--marker); color:var(--ink-900); font-weight:600;}
   #notesContent{flex:1; min-width:0;}
   @media (max-width:800px){ .notes-toc{display:none;} }
+
+  /* ---------- MOBILE RESPONSIVE ---------- */
+  html, body{overflow-x:hidden; max-width:100%;}
+  .mobile-topbar{display:none;}
+  .sidebar-overlay{display:none;}
+
+  @media (max-width:860px){
+    .app.active{flex-direction:column; height:100vh; overflow:hidden;}
+
+    /* Top bar with hamburger, shown only on mobile */
+    .mobile-topbar{
+      display:flex; align-items:center; gap:12px;
+      padding:12px 16px; background:var(--ink-900);
+      border-bottom:1px solid var(--border);
+      flex-shrink:0; position:sticky; top:0; z-index:60;
+    }
+    .mobile-topbar .brand{font-family:var(--font-display); font-size:17px; font-weight:700; margin:0;}
+    .hamburger-btn{
+      background:none; border:1px solid var(--border); border-radius:8px;
+      color:var(--text-ink); font-size:18px; line-height:1; cursor:pointer;
+      padding:8px 11px; flex-shrink:0;
+    }
+
+    /* Sidebar becomes a slide-in drawer */
+    .sidebar{
+      position:fixed; top:0; left:0; height:100vh; width:78vw; max-width:280px;
+      z-index:100; transform:translateX(-100%);
+      transition:transform .25s ease;
+      box-shadow:2px 0 24px rgba(0,0,0,.5);
+    }
+    .sidebar.open{transform:translateX(0);}
+    .sidebar .brand{display:none;} /* brand already shown in mobile topbar */
+
+    .sidebar-overlay{
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,.55);
+      z-index:90;
+    }
+    .sidebar-overlay.active{display:block;}
+
+    /* Main content takes full width, scrolls independently */
+    .main{width:100%; padding:18px 16px; flex:1; min-height:0;}
+
+    /* Dashboard */
+    .welcome-banner{flex-direction:column; align-items:flex-start; gap:14px; padding:20px;}
+    .stat-row{flex-wrap:wrap;}
+    .stat-box{min-width:130px;}
+    .quick-actions{gap:8px;}
+    .quick-action-btn{flex:1 1 auto; justify-content:center;}
+    .subject-card-main{flex-wrap:wrap;}
+
+    /* PDF Chat */
+    .chat-layout{flex-direction:column; height:auto;}
+    .chat-sidebar{width:100%;}
+    .chat-main{height:60vh;}
+
+    /* Notes */
+    .notes-body-layout{flex-direction:column;}
+
+    /* Auth card */
+    .auth-card{width:100%; padding:28px 22px;}
+  }
+
+  @media (max-width:400px){
+    .stat-box{padding:12px 14px;}
+    .stat-box .num{font-size:21px;}
+    .welcome-greeting{font-size:19px;}
+  }
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -192,7 +259,12 @@
 
 <!-- ============ APP SHELL ============ -->
 <div class="app" id="app">
-  <div class="sidebar">
+  <div class="mobile-topbar">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">☰</button>
+    <div class="brand">🎓 BTech AI Learner</div>
+  </div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="sidebar" id="sidebar">
     <div class="brand">🎓 BTech AI Learner</div>
     <div class="sidebar-nav">
       <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
@@ -463,8 +535,33 @@ document.querySelectorAll(".nav-item").forEach(item => {
     const tab = item.dataset.tab;
     switchToTab(tab);
     if(tab === "dashboard") loadDashboard();
+    closeMobileSidebar();
   });
 });
+
+// ---------------- MOBILE SIDEBAR TOGGLE ----------------
+
+const mobileSidebar = document.getElementById("sidebar");
+const mobileSidebarOverlay = document.getElementById("sidebarOverlay");
+const hamburgerBtn = document.getElementById("hamburgerBtn");
+
+function openMobileSidebar(){
+  mobileSidebar.classList.add("open");
+  mobileSidebarOverlay.classList.add("active");
+}
+function closeMobileSidebar(){
+  mobileSidebar.classList.remove("open");
+  mobileSidebarOverlay.classList.remove("active");
+}
+if(hamburgerBtn){
+  hamburgerBtn.addEventListener("click", () => {
+    if(mobileSidebar.classList.contains("open")) closeMobileSidebar();
+    else openMobileSidebar();
+  });
+}
+if(mobileSidebarOverlay){
+  mobileSidebarOverlay.addEventListener("click", closeMobileSidebar);
+}
 
 // ---------------- MARKDOWN (minimal) ----------------
 
