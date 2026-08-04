@@ -124,7 +124,7 @@ def generate_notes(subject: str, topic: str) -> str:
                 )},
             ],
             temperature=0.3,
-            max_tokens=7500,
+            max_tokens=6500,
         )
     except (RateLimitError, APIError) as e:
         return _friendly_error(e)
