@@ -27,8 +27,8 @@ GENERIC_ERROR_MESSAGE = "Something went wrong talking to the AI provider just no
 
 
 def _friendly_error(exc) -> str:
+    print(f"[GROQ ERROR] {type(exc).__name__}: {exc}", flush=True)  # TEMP debug — remove once fixed
     return RATE_LIMIT_MESSAGE if isinstance(exc, RateLimitError) else GENERIC_ERROR_MESSAGE
-
 
 def _chat(messages, temperature=0.2, max_tokens=3000, stream=False):
     """Thin wrapper around the Groq call, used by every feature below."""
