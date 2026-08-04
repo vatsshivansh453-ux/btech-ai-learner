@@ -17,7 +17,7 @@ load_dotenv()
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-MODEL_NAME = "llama-3.3-70b-versatile"
+MODEL_NAME = "openai/gpt-oss-120b"
 
 RATE_LIMIT_MESSAGE = (
     "I've hit the AI provider's rate limit for the moment (the free tier "
