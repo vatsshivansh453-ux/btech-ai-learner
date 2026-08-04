@@ -5,7 +5,7 @@ from utils.memory import get_cached_notes, save_notes_to_cache
 # folded into the cache key so students automatically get freshly
 # regenerated (deeper) notes instead of an old, shallower cached version,
 # without needing a DB migration.
-NOTES_VERSION = "v2-deep"
+NOTES_VERSION = "v3-deep"
 
 
 def get_notes(subject, topic):
